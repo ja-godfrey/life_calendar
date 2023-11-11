@@ -106,12 +106,17 @@ class DataFrameGUI:
         self.scrollbar.pack(side="right", fill="y")
 
     def cell_clicked(self, row, col):
-        # Convert the string date to datetime.date object
+        # Retrieve the start date
         start_date_str = self.df.columns[col]
-        start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()  # Adjust the format if necessary
+        
+        # Ensure start_date is a datetime.date object
+        if isinstance(start_date_str, str):
+            start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        else:
+            start_date = start_date_str
 
         # Calculate the end date of the week
-        end_date = start_date + datetime.timedelta(days=6)  # End date is 6 days after the start date
+        end_date = start_date + datetime.timedelta(days=6)
 
         # Format the prompt message with these dates
         prompt_message = f"What happened between {start_date.strftime('%b %d')} - {end_date.strftime('%b %d, %Y')} ?"
@@ -122,6 +127,7 @@ class DataFrameGUI:
         if value is not None:
             # Update the DataFrame
             self.df.at[self.df.index[row], self.df.columns[col]] = value
+
 
     def on_closing(self):
         # Save to CSV with name and birth year
