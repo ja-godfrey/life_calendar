@@ -1,8 +1,7 @@
 import pandas as pd
 import tkinter as tk
-from tkinter import simpledialog, messagebox, filedialog, Canvas, Scrollbar, ttk
+from tkinter import simpledialog, messagebox, filedialog, Canvas, Scrollbar
 import datetime
-from ttkthemes import ThemedTk
 
 
 # Step 0: Create helper functions
@@ -20,7 +19,8 @@ class ToolTip(object):
         self.tip_window = tw = tk.Toplevel(self.widget)
         tw.wm_overrideredirect(True)
         tw.wm_geometry(f"+{x}+{y}")
-        label = tk.Label(tw, text=tip_text, justify=tk.LEFT, relief=tk.SOLID, borderwidth=1,
+        label = tk.Label(tw, text=tip_text, justify=tk.LEFT,
+                         background="#ffffe0", relief=tk.SOLID, borderwidth=1,
                          font=("tahoma", "8", "normal"))
         label.pack(ipadx=1)
 
@@ -84,14 +84,13 @@ class DataFrameGUI:
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
         for i, row in enumerate(self.df.index):
-            # ttk.Label(self.scrollable_frame, text=row).grid(row=i, column=0)  # Modern styled Year labels
-            ttk.Label(self.scrollable_frame, text=row).grid(row=i, column=0) 
+            tk.Label(self.scrollable_frame, text=row).grid(row=i, column=0)  # Year labels
             for j, col in enumerate(self.df.columns, start=1):
                 # Check if cell has data
                 data = self.df.at[row, col]
-                canvas = tk.Canvas(self.scrollable_frame, width=25, height=30)
-                canvas.grid(row=i, column=j, padx=0, pady=0)
-                fill_color = 'black' if pd.notna(data) else 'lightgray'
+                canvas = tk.Canvas(self.scrollable_frame, width=30, height=30, bg='white')
+                canvas.grid(row=i, column=j)
+                fill_color = 'black' if pd.notna(data) else 'white'
                 canvas.create_oval(5, 5, 25, 25, fill=fill_color)
 
                 # Bind a click event
@@ -107,18 +106,14 @@ class DataFrameGUI:
         self.scrollbar.pack(side="right", fill="y")
 
     def cell_clicked(self, row, col):
-        # Retrieve the year and week
-        year_str = self.df.index[row]
-        week_str = self.df.columns[col]
-
-        # Convert the year and week into datetime.date objects
-        if isinstance(week_str, str):
-            week_date = datetime.datetime.strptime(week_str, '%Y-%m-%d').date()
+        # Retrieve the start date
+        start_date_str = self.df.columns[col]
+        
+        # Ensure start_date is a datetime.date object
+        if isinstance(start_date_str, str):
+            start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
         else:
-            week_date = week_str
-
-        # Ensure the week_date is within the correct year
-        start_date = datetime.date(int(year_str), week_date.month, week_date.day)
+            start_date = start_date_str
 
         # Calculate the end date of the week
         end_date = start_date + datetime.timedelta(days=6)
@@ -135,7 +130,7 @@ class DataFrameGUI:
 
             # Update the canvas visually
             canvas_item = self.scrollable_frame.grid_slaves(row=row, column=col+1)[0]
-            canvas_item.create_oval(5, 5, 25, 25, fill='blue')
+            canvas_item.create_oval(5, 5, 25, 25, fill='green')  # Change fill color to green to indicate data entry
             tooltip = ToolTip(canvas_item)
             canvas_item.bind("<Enter>", lambda event, text=value, tooltip=tooltip: tooltip.show_tip(text, event))
             canvas_item.bind("<Leave>", lambda event, tooltip=tooltip: tooltip.hide_tip())
@@ -146,15 +141,7 @@ class DataFrameGUI:
         self.master.destroy()
 
 # Step 4: Initialize the GUI
-root = ThemedTk(theme="Breeze")  # Choose a theme like 'equilux', 'arc', etc.
+root = tk.Tk()
 root.title(f"👶{name}💀")
-skull_image = tk.PhotoImage(file='icon.png')  # Use the actual path to your PNG or GIF file
-root.iconphoto(False, skull_image)
-
-style = ttk.Style(root)
-style.configure("TLabel", padding=5, font=("Arial", 10))  # Customize label style
-style.configure("TButton", padding=5, font=("Arial", 10), background="#333")  # Customize button style
-style.configure("Vertical.TScrollbar", gripcount=0, background="#333", darkcolor="#333", lightcolor="#333", troughcolor="#333", bordercolor="#333", arrowcolor="white")
-
 app = DataFrameGUI(root, df)
 root.mainloop()
